@@ -1,46 +1,21 @@
-<<<<<<< HEAD
 import csv
 import pandas as pd
+import numpy as np
 
-x1 = []
-x2 = []
-x3 = []
-x4 = []
-x5 = []
-x6 = []
-x7 = []
-x8 = []
-x9 = []
-x10 = []
-Y = []
+def initialize_variables():
+    df = pd.read_csv('lab1/lab1var5.csv', delimiter=';', decimal=",")
+    X = df.iloc[: , 1:11]
+    Y = df.iloc[: , 11]
+    return X,Y
 
-def initialize_variables(x1, x2, x3
-                         x4, x5, x6
-                         x7, x8, x9
-                         x10, Y):
-    with open('lab1var5.csv', 'r') as rf:
-        reader = csv.reader(rf, delimiter=';')
-        for row in reader:
-            x1.append(row[1])
-            x2.append(row[2])
-            x3.append(row[3])
-            x4.append(row[4])
-            x5.append(row[5])
-            x6.append(row[6])
-            x7.append(row[7])
-            x8.append(row[8])
-            x9.append(row[9])
-            x10.append(row[10])
-            Y.append(row[11])
-
-print(Y)
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharmXXXXYYYY')
-
+def normalize_X(X):
+    X_normalized = X.copy(deep=True)
+    for column in X_normalized:
+        mean = X[column].mean()
+        std = X[column].std()
+        for i, x in enumerate(X_normalized[column]):
+            X_normalized[column][i] = (x - mean) / std
+    return X_normalized
+X,Y = initialize_variables()
+X_normalized = normalize_X(X)
+print(X_normalized)
