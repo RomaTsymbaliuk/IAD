@@ -59,10 +59,16 @@ def compare_Pirson(calculated_pirson, probability, n, m, R, X):
             for j, y in enumerate(tkj_rows):
                 t_criteria = t.ppf(df=(m - n), q=probability)
                 if (abs(y) > t_criteria):
-                    print('Variable ',(i + 1), ' colinear ', (j + 1))
+                    print('Variable x',(i + 1), ' colinear ', 'x',(j + 1))
 
-def add_Del_Algorithm():
-    pass
+def ADD_DELL(X, y, raiting_function=LinearRegression):
+    X_first = ADD(X, y, raiting_function=LinearRegression)
+#    X = DEL(X_first, y, raiting_function=LinearRegression)
+    return X_first
+def DEL_ADD(X, y, raiting_function=LinearRegression):
+    X_first = DEL(X, y, raiting_function=LinearRegression)
+    X = ADD(X_first, y, raiting_function=LinearRegression)
+    print(X)
 
 def get_index_matrix(A, vector):
     #for i in range(A.shape[1]):
@@ -72,32 +78,27 @@ def get_index_matrix(A, vector):
     print(vector)
 
 def ADD(X, y, raiting_function=LinearRegression):
-    N = 6
+    N = 2
     X_copy = X
     X_first = np.empty((X.shape[0], 1), float)
-    start = 1
     for index in range(N):
         Err_array = []
         for i in range(X_copy.shape[1]):
             X_add = np.array([X_copy[:, i]])
             X_add = X_add.reshape(-1, 1)
-            if not start:
-                X_first_copy = np.concatenate((X_first, X_add), axis=1)
-            else:
-                X_first_copy = X_add
+            X_first_copy = np.concatenate((X_first, X_add), axis=1)
             X_train, X_test, y_train, y_test = train_test_split(X_first_copy, y, test_size=0.2, random_state=42)
             lr = raiting_function().fit(X_train, y_train)
             Err = sum([x for x in abs(y_test - lr.predict(X_test))])
             Err_array.append(Err)
-        min_arg_X = Err_array.index(min(Err_array))
-        print('X', min_arg_X + 1, ' is informative')
+        min_arg_X = np.argmin(Err_array)
         X_first = np.concatenate((X_first, np.array(X_copy[:, min_arg_X]).reshape(-1, 1)), axis=1)
-#        print(X_first)
         X_copy = np.delete(X_copy, min_arg_X, 1)
-        start = 0
+
+    return X_first
 
 def DEL(X, y, raiting_function=LinearRegression):
-    N = 3
+    N = 1
 
     for index in range(N):
         Err_array = []
@@ -112,8 +113,9 @@ def DEL(X, y, raiting_function=LinearRegression):
             Err = sum([x for x in abs(y_test.to_numpy() - lr.predict(X_test))])
             Err_array.append(Err - Err0)
         min_arg_X = Err_array.index(min(Err_array))
-        print('X',min_arg_X, ' is not significant')
         X = np.delete(X, min_arg_X, 1)
+
+    return X
 
 def Farrar_Glober(X):
     X_normalized = normalize_X(X)
@@ -121,7 +123,11 @@ def Farrar_Glober(X):
     pirson = calculate_Pirson(R, n, m)
     compare_Pirson(pirson, 1 - alpha, n, m, R, X)
 
-#Farrar_Glober()
 X,Y = initialize_variables()
 Farrar_Glober(X)
-ADD(X.to_numpy(), Y.to_numpy())
+
+X_valuable = ADD_DELL(X.to_numpy(), Y)
+#print(X_valuable)
+X_valuable = DEL_ADD(X.to_numpy(), Y)
+print(X_valuable)
+#DEL_ADD(X.to_numpy(), Y)
