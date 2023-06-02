@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import math
 from scipy.stats import *
+from sklearn.linear_model import *
+from sklearn.model_selection import train_test_split
+import random
 
 alpha = 0.05
 def initialize_variables():
@@ -57,11 +60,54 @@ def compare_Pirson(calculated_pirson, probability, n, m, R, X):
                 t_criteria = t.ppf(df=(m - n), q=probability)
                 if (abs(y) > t_criteria):
                     print('Variable ',(i + 1), ' colinear ', (j + 1))
-def Farrar_Glober():
-    X,Y = initialize_variables()
+
+def add_Del_Algorithm():
+    pass
+
+def ADD(X, y, raiting_function=LinearRegression):
+    N = 3
+    X_copy = X.copy(deep=True)
+    j = random.randint(0, 10)
+    X_first = X_copy[:, j]
+
+    for index in range(N):
+        Err_array = []
+        for i in range(X_copy.shape[1]):
+            X_train, X_test, y_train, y_test = train_test_split(X_first, y, test_size=0.2, random_state=42)
+            lr = raiting_function().fit(X_train, y_train)
+            Err = sum([x for x in abs(y_test.to_numpy() - lr.predict(X_test))])
+            Err_array.append(Err)
+        min_arg_X = Err_array.index(min(Err_array))
+        print('X', min_arg_X, 'is not significant')
+        X_first = np.concatenate((X_first,X[:, min_arg_X]), axis=1)
+        X_copy = np.delete(X_copy, min_arg_X, 1)
+
+def DEL(X, y, raiting_function=LinearRegression):
+    N = 3
+
+    for index in range(N):
+        Err_array = []
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        lr = raiting_function().fit(X_train, y_train)
+        Err0 = sum([x for x in abs(y_test.to_numpy() - lr.predict(X_test))])
+
+        for j in range(X.shape[1]):
+            X_copy = np.delete(X, j, 1)
+            X_train, X_test, y_train, y_test = train_test_split(X_copy, y, test_size=0.2, random_state=42)
+            lr = raiting_function().fit(X_train, y_train)
+            Err = sum([x for x in abs(y_test.to_numpy() - lr.predict(X_test))])
+            Err_array.append(Err - Err0)
+        min_arg_X = Err_array.index(min(Err_array))
+        print('X',min_arg_X, ' is not significant')
+        X = np.delete(X, min_arg_X, 1)
+
+def Farrar_Glober(X):
     X_normalized = normalize_X(X)
     R, n, m = correlation_matrix_calculate(X_normalized)
     pirson = calculate_Pirson(R, n, m)
     compare_Pirson(pirson, 1 - alpha, n, m, R, X)
 
-Farrar_Glober()
+#Farrar_Glober()
+X,Y = initialize_variables()
+Farrar_Glober(X)
+ADD(X, Y)
