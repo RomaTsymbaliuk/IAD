@@ -126,8 +126,6 @@ def Farrar_Glober(X):
 
 X,Y = initialize_variables()
 X_correlated = Farrar_Glober(X)
-#print(pd.DataFrame(X_correlated))
-#X_valuable = DEL_ADD(X_correlated, Y)
 X_valuable = ADD_DELL(X_correlated, Y, N_add = 4, N_del=2)
 #X_valuable = DEL_ADD(X_correlated, Y, N_add = 2, N_del= 2)
 print(pd.DataFrame(X_valuable))
