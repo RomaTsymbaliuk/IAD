@@ -31,6 +31,7 @@ class Graph:
     def __init__(self, points):
         self.points = points
         self.edges = []
+        self.C = 0
     def build_full_graph(self):
         for point_A in self.points:
             for point_B in self.points:
@@ -49,6 +50,11 @@ class Graph:
         self.points.append(edge.point_A)
         self.points.append(edge.point_B)
         self.edges.append(edge)
+
+    def del_edge(self, edge):
+        self.edges.remove(edge)
+        self.points.remove(edge.point_A)
+        self.points.remove(edge.point_B)
 def kmeans_clustering(data):
     inertias = []
 
@@ -118,6 +124,26 @@ def KRAB(graph, points):
         min_edge = get_minimum_edge(graph.edges)
         krab_graph.add_edge(min_edge)
         remove_edge_from_full_graph(min_edge, graph)
+
+    ml = 0
+    mr = 0
+    max_edge_C = krab_graph.edges[0]
+    for edge in krab_graph.edges:
+        for pnt in krab_graph.points:
+            vect1_coords = pnt.coordinates - edge.point_A.coordinates
+            vect2_coords = pnt.coordinates - edge.point_B.coordinates
+            dot_prod = sum([vect1_coords[i] * vect2_coords[i] for i in range(len(vect1_coords))])
+            if dot_prod > 0:
+                ml = ml + 1
+            else:
+                mr = mr + 1
+
+        C = ml * mr / len(krab_graph.points) * 4 * edge.length
+        edge.C = C
+        if edge.C > max_edge_C.C:
+            max_edge_C = edge
+
+    krab_graph.del_edge(max_edge_C)
 
 
 vectors = prepare_data(dataframe)
