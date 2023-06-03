@@ -65,16 +65,16 @@ def compare_Pirson(calculated_pirson, probability, n, m, R, X):
                     print('Variable x', (i + 1), ' colinear ', 'x',(j + 1))
                     X_correlated = np.append(X_correlated, np.array(X[..., i]).reshape(-1, 1), axis=1)
         return X_correlated[:, 1:]
-def ADD_DELL(X, y, raiting_function=LinearRegression):
-    X_first = ADD(X, y, raiting_function=LinearRegression)
-    X = DEL(X_first, y, raiting_function=LinearRegression)
+def ADD_DELL(X, y, N_add, N_del, raiting_function=LinearRegression):
+    X_first = ADD(X, y, raiting_function=LinearRegression, N=N_add)
+    X = DEL(X_first, y, raiting_function=LinearRegression, N=N_del)
     return X
-def DEL_ADD(X, y, raiting_function=LinearRegression):
-    X_first = DEL(X, y, raiting_function=LinearRegression)
-    X = ADD(X_first, y, raiting_function=LinearRegression)
+def DEL_ADD(X, y, N_add, N_del, raiting_function=LinearRegression):
+    X_first = DEL(X, y, raiting_function=LinearRegression, N=N_add)
+    X = ADD(X_first, y, raiting_function=LinearRegression, N=N_del)
     return X
 
-def ADD(X, y, raiting_function=LinearRegression, N=1):
+def ADD(X, y, raiting_function=LinearRegression, N=4):
     X_copy = X
     X_first = np.zeros((X.shape[0], 1))
 
@@ -91,27 +91,29 @@ def ADD(X, y, raiting_function=LinearRegression, N=1):
             Err = sum([x for x in abs(y_test - lr.predict(X_test))])
             Err_array.append(Err)
             deleted_indexes.append(i)
-            X_copy = np.delete(X, deleted_indexes, 1)
         min_arg_X = np.argmin(Err_array)
         X_first = np.concatenate((X_first, np.array(X[:, min_arg_X]).reshape(-1, 1)), axis=1)
         X_copy = X
 
     return X_first[:, 1:]
 
-def DEL(X, y, raiting_function=LinearRegression, N=3):
+def DEL(X, y, raiting_function=LinearRegression, N=2):
 
+    deleted_indexes = []
     for index in range(N):
         Err_array = []
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        lr = raiting_function().fit(X_train, y_train)
-        Err0 = sum([x for x in abs(y_test.to_numpy() - lr.predict(X_test))])
-        for j in range(X.shape[1]):
-            X_train, X_test, y_train, y_test = train_test_split(X_copy, y, test_size=0.2, random_state=42)
+        deleted_indexes = []
+        for i in range(X.shape[1]):
+            deleted_indexes.append(i)
+            X_first_copy = np.delete(X, deleted_indexes, axis=1)
+            X_train, X_test, y_train, y_test = train_test_split(X_first_copy, y, test_size=0.2, random_state=42)
             lr = raiting_function().fit(X_train, y_train)
-            Err = sum([x for x in abs(y_test.to_numpy() - lr.predict(X_test))])
-            Err_array.append(Err - Err0)
-        min_arg_X = Err_array.index(min(Err_array))
-        X = np.delete(X, min_arg_X, 1)
+            Err = sum([x for x in abs(y_test - lr.predict(X_test))])
+            Err_array.append(Err)
+            deleted_indexes.pop()
+        min_arg_X = np.argmin(Err_array)
+        deleted_indexes.append(min_arg_X)
+        X = np.delete(X, min_arg_X, axis=1)
 
     return X
 
@@ -125,6 +127,8 @@ def Farrar_Glober(X):
 X,Y = initialize_variables()
 X_correlated = Farrar_Glober(X)
 #print(pd.DataFrame(X_correlated))
-X_valuable = ADD(X_correlated, Y)
+#X_valuable = DEL_ADD(X_correlated, Y)
+X_valuable = ADD_DELL(X_correlated, Y, N_add = 4, N_del=2)
+#X_valuable = DEL_ADD(X_correlated, Y, N_add = 2, N_del= 2)
 print(pd.DataFrame(X_valuable))
 #DEL_ADD(X.to_numpy(), Y)
