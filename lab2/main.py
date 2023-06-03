@@ -19,6 +19,8 @@ class Point:
 
 class Edge:
     def __init__(self, point_A, point_B):
+        self.point_A = point_A
+        self.point_B = point_B
         length = 0
         for point_A_coord, point_B_coord in zip(point_A.coordinates, point_B.coordinates):
             length = length + math.pow(point_A_coord - point_B_coord, 2)
@@ -29,7 +31,6 @@ class Graph:
     def __init__(self, points):
         self.points = points
         self.edges = []
-        self.build_full_graph()
     def build_full_graph(self):
         for point_A in self.points:
             for point_B in self.points:
@@ -38,6 +39,16 @@ class Graph:
                     point_B.neighbours.append(point_A)
                     self.edges.append(Edge(point_A, point_B))
 
+    def build_graph_by_edges(self, edges):
+        for edge in edges:
+            edge.point_A.neighbours.append(edge.point_B)
+            edge.point_B.neighbours.append(edge.point_A)
+            self.edges.append(edge)
+
+    def add_edge(self, edge):
+        self.points.append(edge.point_A)
+        self.points.append(edge.point_B)
+        self.edges.append(edge)
 def kmeans_clustering(data):
     inertias = []
 
@@ -70,12 +81,51 @@ def initialize_points(vectors):
         points.append(point)
 
     return points
-def KRAB(graph):
-    pass
+
+def get_minimum_edge(edges):
+    minimum_edge = edges[0]
+    for edge in edges:
+        if edge.length < minimum_edge.length:
+            minimum_edge = edge
+
+    return minimum_edge
+
+def remove_points_from_list(point, points):
+    for pnt in points:
+        equal = 0
+        if (pnt.coordinates[0] - point.coordinates[0]) < 0.0000001:
+            equal = 1
+        else:
+            equal = 0
+        if equal:
+            points.remove(pnt)
+            break
+def remove_edge_from_full_graph(edge, graph):
+    graph.edges.remove(edge)
+
+def get_points_not_in_graph(points, graph):
+    non_points = []
+    for point in points:
+        if point not in graph.points:
+            non_points.append(point)
+    return non_points
+def KRAB(graph, points):
+    graph.build_full_graph()
+    print(len(graph.edges))
+    krab_graph = Graph([])
+
+    while get_points_not_in_graph(points, krab_graph):
+        min_edge = get_minimum_edge(graph.edges)
+        krab_graph.add_edge(min_edge)
+        remove_edge_from_full_graph(min_edge, graph)
+
 
 vectors = prepare_data(dataframe)
 points = initialize_points(vectors)
-graph = Graph(points)
-print(len(graph.edges))
 #kmeans_clustering(data)
+graph = Graph(points)
+#for point in points:
+#    print(point.coordinates)
+KRAB(graph, points)
+
 
