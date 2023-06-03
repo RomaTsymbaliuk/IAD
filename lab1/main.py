@@ -4,11 +4,23 @@ import math
 from scipy.stats import *
 from sklearn.linear_model import *
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
 import random
 
 alpha = 0.05
+
+colinear_indexes = []
+colinear_pair_indexes = []
+
+def get_non_informative_indexes(X_valuable, X, colinear_pair_indexes):
+    non_informative_indexes = []
+    for x1 in X_valuable.reshape(-1, 1)[:X.shape[1]]:
+        for i, x2 in enumerate(X.to_numpy().reshape(-1, 1)[:X.shape[1]]):
+            if x1 == x2:
+                non_informative_indexes.append(i)
+    return non_informative_indexes
 def initialize_variables():
-    df = pd.read_csv('lab1/lab1var5.csv', delimiter=';', decimal=",")
+    df = pd.read_csv('./lab1var5.csv', delimiter=';', decimal=",")
     X = df.iloc[: , 1:11]
     Y = df.iloc[: , 11]
     return X,Y
@@ -51,6 +63,7 @@ def compare_Pirson(calculated_pirson, probability, n, m, R, X):
         fisher_table = f.ppf(q=probability, dfd=(m - n), dfn=(n - 1))
         for i, fisher_value in enumerate(F):
             if fisher_value > fisher_table:
+                colinear_indexes.append(i)
                 print('Variable x',(i + 1), ' multicolinear with others')
         tkj = np.zeros((X.shape[1], X.shape[1]))
         for i in range(X.shape[1]):
@@ -63,6 +76,7 @@ def compare_Pirson(calculated_pirson, probability, n, m, R, X):
                 t_criteria = t.ppf(df=(m - n), q=probability)
                 if (abs(y) > t_criteria):
                     print('Variable x', (i + 1), ' colinear ', 'x',(j + 1))
+                    colinear_pair_indexes.append(i)
                     X_correlated = np.append(X_correlated, np.array(X[..., i]).reshape(-1, 1), axis=1)
         return X_correlated[:, 1:]
 def ADD_DELL(X, y, N_add, N_del, raiting_function=LinearRegression):
@@ -132,3 +146,19 @@ X_valuable = ADD_DELL(X_correlated, Y, N_add = 4, N_del=2)
 #X_valuable = DEL_ADD(X_correlated, Y, N_add = 2, N_del= 2)
 print(pd.DataFrame(X_valuable))
 #DEL_ADD(X.to_numpy(), Y)
+#X_valuable = ADD_DELL(X_correlated, Y, N_add = 4, N_del=2)
+X_valuable = DEL_ADD(X_correlated, Y, N_add = 2, N_del= 2)
+#DEL_ADD(X.to_numpy(), Y)
+non_informative_indexes = get_non_informative_indexes(X_valuable, X, colinear_pair_indexes)
+
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+print("Full values r2_score : ", r2_score(LinearRegression().fit(X_train, y_train).predict(X_test), y_test))
+
+X_train, X_test, y_train, y_test = train_test_split(np.delete(X, colinear_indexes, axis=1), Y, test_size=0.2, random_state=42)
+print("Without multicolinear values r2_score : ", r2_score(LinearRegression().fit(X_train, y_train).predict(X_test), y_test))
+
+X_train, X_test, y_train, y_test = train_test_split(np.delete(X, colinear_pair_indexes, axis=1), Y, test_size=0.2, random_state=42)
+print("Without pair multicolinear values r2_score : ", r2_score(LinearRegression().fit(X_train, y_train).predict(X_test), y_test))
+
+X_train, X_test, y_train, y_test = train_test_split(np.delete(X, non_informative_indexes, axis=1), Y, test_size=0.2, random_state=42)
+print("Without non-informative values r2_score : ", r2_score(LinearRegression().fit(X_train, y_train).predict(X_test), y_test))
